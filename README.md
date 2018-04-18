@@ -1,40 +1,40 @@
-## ÂÛÎÄ×Ô¶¯·­Òë
-×Ô¶¯·­ÒëÂÛÎÄµÄ pdf£¬Éú³É´ø·­Òë¶ÎÂäµÄ txt ÎÄµµ
+## è®ºæ–‡è‡ªåŠ¨ç¿»è¯‘
+è‡ªåŠ¨ç¿»è¯‘è®ºæ–‡çš„ pdfï¼Œç”Ÿæˆå¸¦ç¿»è¯‘æ®µè½çš„ txt æ–‡æ¡£
 
-## ½éÉÜ
-PDF ½âÎö³ÉÎÄ±¾²ÉÓÃ pdfminer ¿â£¬Ö÷Òª²Î¿¼£º[½â¾öpdfminer ImportError: cannot import name process_pdf](https://blog.csdn.net/MrLevo520/article/details/52136414) ºÍ [£¨7£©PDFMinerÌáÈ¡PDFÎÄ±¾](https://blog.csdn.net/fighting_no1/article/details/51038942)
+## ä»‹ç»
+PDF è§£ææˆæ–‡æœ¬é‡‡ç”¨ pdfminer åº“ï¼Œä¸»è¦å‚è€ƒï¼š[è§£å†³pdfminer ImportError: cannot import name process_pdf](https://blog.csdn.net/MrLevo520/article/details/52136414) å’Œ [ï¼ˆ7ï¼‰PDFMineræå–PDFæ–‡æœ¬](https://blog.csdn.net/fighting_no1/article/details/51038942)
 
-·­Òë²¿·Öµ÷ÓÃÁËÍøÓÑ·â×°µÄÓĞµÀ·­ÒëµÄÃâ·Ñ API£¬²Î¿¼ github£º[Chinese-boy/Many-Translaters](https://github.com/Chinese-boy/Many-Translaters)
+ç¿»è¯‘éƒ¨åˆ†è°ƒç”¨äº†ç½‘å‹å°è£…çš„æœ‰é“ç¿»è¯‘çš„å…è´¹ APIï¼Œå‚è€ƒ githubï¼š[Chinese-boy/Many-Translaters](https://github.com/Chinese-boy/Many-Translaters)
 
-ps£ºÓĞµÀ·­ÒëAPIÏÖÔÚÊÕ·ÑÁË£¬Ò»Æª4Ò³µÄÂÛÎÄ·­ÒëÒ»´Î¾Í»¨ÁË1Ôª¡£
+psï¼šæœ‰é“ç¿»è¯‘APIç°åœ¨æ”¶è´¹äº†ï¼Œä¸€ç¯‡4é¡µçš„è®ºæ–‡ç¿»è¯‘ä¸€æ¬¡å°±èŠ±äº†1å…ƒã€‚
 
 
-## ÒÀÀµ
-×¢Òâ£º»ùÓÚ python 2.7
+## ä¾èµ–
+æ³¨æ„ï¼šåŸºäº python 2.7
 * pdfminer
 * requests
 
 
-## ÓÃ·¨
+## ç”¨æ³•
 ```
 paper_translation.py 2017_ICSA_Bidirectional Mapping between Architecture Model and Code for Synchronization.pdf
 ```
 
-## ²Î¿¼×ÊÁÏ
-* PDFMiner ¹Ù·½ÎÄµµ  
+## å‚è€ƒèµ„æ–™
+* PDFMiner å®˜æ–¹æ–‡æ¡£  
 https://euske.github.io/pdfminer/
 
 * PDFMiner Github  
 https://github.com/euske/pdfminer
 
-* pdfminer API½éÉÜ£ºpdfÍøÒ³ÅÀ³æ  
+* pdfminer APIä»‹ç»ï¼špdfç½‘é¡µçˆ¬è™«  
 https://www.cnblogs.com/rongyux/p/5445723.html
 
-* ~~ÓĞµÀÖÇÔÆ£¨ÓĞµÀ·­Òë¹Ù·½API£¬ÊÕ·Ñ£©~~  
+* ~~æœ‰é“æ™ºäº‘ï¼ˆæœ‰é“ç¿»è¯‘å®˜æ–¹APIï¼Œæ”¶è´¹ï¼‰~~  
 http://ai.youdao.com/gw.s
 
-* ~~PythonÑ§Ï°±Ê¼Ç(28)-Python¶ÁÈ¡wordÎÄ±¾~~  
+* ~~Pythonå­¦ä¹ ç¬”è®°(28)-Pythonè¯»å–wordæ–‡æœ¬~~  
 https://blog.csdn.net/woshisangsang/article/details/75221723
 
-* ~~python ²Ù×÷ office~~  
+* ~~python æ“ä½œ office~~  
 https://www.cnblogs.com/Jacklovely/p/5743868.html
