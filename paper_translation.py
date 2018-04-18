@@ -1,4 +1,8 @@
 #coding=utf8
+# 注意：程序基于 python 2.7
+# 依赖：
+# requests
+# pdfminer
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfpage import PDFPage
@@ -20,20 +24,26 @@ import sys
 import json
 
 from ProxyIP import ProxyIP
+from multiprocessing import Pool
 
 # 输出日志等级
 # 0: 输出最简单，无段落信息，无错误信息
 # 1: 输出段落信息，无错误信息
 # 2: 输出段落信息，输出错误信息
-log_level = 1
+log_level = 0
 
 # 编码信息
 input_encoding = sys.stdin.encoding
 output_encoding = sys.stdout.encoding
 file_encoding = 'utf8'
 
+# 最大进程数
+MAX_PROCESS_NUM = 100
+
 
 # 有道翻译免费 api 接口
+# 该类为网友封装的第三方免费翻译接口，我在此基础上做了一些修改
+# 参考自：https://github.com/Chinese-boy/Many-Translaters
 class Youdao(object):
     def __init__(self, msg):
         self.msg = msg
@@ -118,9 +128,13 @@ class Youdao(object):
                 self.proxies = {'http':'%s:%d'%(ip[0],ip[1])}
         return result
 
-                    
+def translate_per_paragraph(paragraph_no, paragraph):
+    '''翻译每个段落'''
+    trans_paragraph = Youdao(paragraph).get_result()
+    print '[Paragraph %d translate successfully.]'%(paragraph_no+1)
+    return trans_paragraph
 
-def Pdf2Txt(path,Save_path):
+def Pdf2Txt(path):
     # 打开文件
     fp = open(path, 'rb')
     #来创建一个pdf文档分析器
@@ -173,37 +187,74 @@ def Pdf2Txt(path,Save_path):
                         print str(e)
                         print "Failed!"
         print ''
-
-        # 开始翻译
-        print '[Start translate all pdf paragraph...]'
-        # 清楚空白元素
-        paragraph_list = filter(lambda x:False if x.strip == '' else True, paragraph_list)
-        paragraph_len = len(paragraph_list)
-        # 创建空文件
-        with open('%s'%(Save_path),'w') as f:
-            pass
-        # 写入文件
-        with open('%s'%(Save_path),'a') as f:
-            for i, paragraph in enumerate(paragraph_list):
-                print '[Translating %d/%d...]'%(i+1, paragraph_len)
-                
-                # 写入英文段落
-                f.write(paragraph.encode('utf8'))
-                f.write('\n\n')
-
-                # 写入翻译段落
-                if log_level > 0:
-                    print paragraph.encode(output_encoding, 'ignore')
-                trans_paragraph = Youdao(paragraph).get_result()
-                
-                if log_level > 0:
-                    print '[Translate success!]'
-                    print trans_paragraph.encode(output_encoding, 'ignore')
-                    print ''
-                f.write(trans_paragraph.encode('utf8'))
-                f.write('\n\n')
-
     fp.close()
+    return paragraph_list
+
+def translate(paragraph_list, Save_path):
+    # 开始翻译
+    print '[Start translate all pdf paragraph...]'
+    paragraph_len = len(paragraph_list)
+    # 清除空白元素
+    paragraph_list = filter(lambda x:False if x.strip == '' else True, paragraph_list)
+    
+    # 创建进程池
+    pool = Pool(processes = MAX_PROCESS_NUM)
+
+    # 把所有抓取任务放到进程池中
+    print '[Push all translate process in pool...]'
+    start_time = time.clock()
+    results = []
+    for i, paragraph in enumerate(paragraph_list):
+        # print 'Push process %d/%d in pool...'%(i+1, paragraph_len)
+        results.append( pool.apply_async(translate_per_paragraph,(i, paragraph) ) )
+    # print ''
+    
+    # 关闭进程池，使其不再接受请求
+    pool.close()
+    
+    # 等待所有进程请求执行完毕
+    print '[Start multiprocessing translate...]'
+    pool.join()
+
+    # 评估翻译速度
+    end_time = time.clock()
+    print '[All translation complete.]'
+    total_time = float(end_time - start_time)
+    print '[Total time : %f s]'%(total_time)
+    print '[Average time of per process : %f s]'%(total_time/paragraph_len)
+    print ''
+    
+    # 获取翻译结果
+    print '[Get translation result...]'
+    trans_paragraph_list = []
+    for result in results:
+        trans_paragraph_list.append( result.get() )
+
+    # 创建空文件
+    with open('%s'%(Save_path),'w') as f:
+        pass
+    # 写入文件
+    print '[Writing all paragraph...]'
+    with open('%s'%(Save_path),'a') as f:
+        for i, paragraph in enumerate(paragraph_list):
+            print '[Writing paragraph %d/%d...]'%(i+1, paragraph_len)
+            
+            # 写入英文段落
+            f.write(paragraph.encode('utf8'))
+            f.write('\n\n')
+
+            # 写入翻译段落
+            if log_level > 0:
+                print paragraph.encode(output_encoding, 'ignore')
+            trans_paragraph = trans_paragraph_list[i]
+            
+            if log_level > 0:
+                print trans_paragraph.encode(output_encoding, 'ignore')
+                print ''
+            f.write(trans_paragraph.encode('utf8'))
+            f.write('\n\n')
+    print '[The translated document has been written to local.]'
+
 
 
 
@@ -211,5 +262,6 @@ def Pdf2Txt(path,Save_path):
 if __name__ == '__main__':
     filename = sys.argv[1]
 
-    Pdf2Txt(filename,'%s.txt'%filename)
+    paragraph_list = Pdf2Txt(filename)
+    translate(paragraph_list, '%s.txt'%filename)
 
