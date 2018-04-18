@@ -139,7 +139,7 @@ def Pdf2Txt(path,Save_path):
         paragraph_list = []
         print '[Start get all pdf pages content...]'
         for page_no, page in enumerate(PDFPage.create_pages(document)):
-            print '[Get page %d content...]'%(page_no)
+            print '[Get content of page %d ...]'%(page_no)
             interpreter.process_page(page)
             # 接受该页面的LTPage对象
             layout=device.get_result()
