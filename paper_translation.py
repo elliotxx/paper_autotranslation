@@ -14,6 +14,7 @@ from cStringIO import StringIO
 import requests
 import hashlib
 import time
+import random
 
 import sys
 import json
@@ -24,7 +25,7 @@ from ProxyIP import ProxyIP
 # 0: 输出最简单，无段落信息，无错误信息
 # 1: 输出段落信息，无错误信息
 # 2: 输出段落信息，输出错误信息
-log_level = 0   
+log_level = 1
 
 # 有道翻译免费 api 接口
 class Youdao(object):
@@ -136,9 +137,9 @@ def Pdf2Txt(path,Save_path):
         # 处理每一页
         paragraph = ''
         paragraph_list = []
-        print '[Start get all pdf pages...]'
+        print '[Start get all pdf pages content...]'
         for page_no, page in enumerate(PDFPage.create_pages(document)):
-            print '[Get pdf page %d...]'%(page_no)
+            print '[Get page %d content...]'%(page_no)
             interpreter.process_page(page)
             # 接受该页面的LTPage对象
             layout=device.get_result()
@@ -168,7 +169,7 @@ def Pdf2Txt(path,Save_path):
         # 写入文件
         print '[Start translate all pdf paragraph...]'
         paragraph_len = len(paragraph_list)
-        with open('%s'%(Save_path),'w') as f:
+        with open('%s'%(Save_path),'a') as f:
             for i, paragraph in enumerate(paragraph_list):
                 print '[Translating %d/%d...]'%(i+1, paragraph_len)
                 # 写入英文段落
