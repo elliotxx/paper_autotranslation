@@ -27,6 +27,12 @@ from ProxyIP import ProxyIP
 # 2: 输出段落信息，输出错误信息
 log_level = 1
 
+# 编码信息
+input_encoding = sys.stdin.encoding
+output_encoding = sys.stdout.encoding
+file_encoding = 'utf8'
+
+
 # 有道翻译免费 api 接口
 class Youdao(object):
     def __init__(self, msg):
@@ -41,7 +47,7 @@ class Youdao(object):
     def get_md(self, value):
         '''md5加密'''
         m = hashlib.md5()
-        m.update(value.decode('utf8').encode('utf-8','ignore'))
+        m.update(value.encode('utf-8','ignore'))
         return m.hexdigest()
 
     def get_salt(self):
@@ -148,7 +154,9 @@ def Pdf2Txt(path,Save_path):
                 try:
                     if(isinstance(x,LTTextBox)):
                         for xx in x:
-                            paragraph += xx.get_text().strip('\n').decode('utf8', 'ignore')
+                            content = xx.get_text().strip('\n')
+                            paragraph += content
+
                         # 去除带论文商标的段落
                         if paragraph.find('©'.decode('utf8')) != -1:
                             paragraph = ''
@@ -166,24 +174,31 @@ def Pdf2Txt(path,Save_path):
                         print "Failed!"
         print ''
 
-        # 写入文件
+        # 开始翻译
         print '[Start translate all pdf paragraph...]'
+        # 清楚空白元素
+        paragraph_list = filter(lambda x:False if x.strip == '' else True, paragraph_list)
         paragraph_len = len(paragraph_list)
+        # 创建空文件
+        with open('%s'%(Save_path),'w') as f:
+            pass
+        # 写入文件
         with open('%s'%(Save_path),'a') as f:
             for i, paragraph in enumerate(paragraph_list):
                 print '[Translating %d/%d...]'%(i+1, paragraph_len)
+                
                 # 写入英文段落
                 f.write(paragraph.encode('utf8'))
                 f.write('\n\n')
+
                 # 写入翻译段落
-                # res = translate(paragraph)
-                # trans_paragraph = res['translation'][0].encode('utf8')
                 if log_level > 0:
-                    print paragraph
+                    print paragraph.encode(output_encoding, 'ignore')
                 trans_paragraph = Youdao(paragraph).get_result()
+                
                 if log_level > 0:
                     print '[Translate success!]'
-                    print trans_paragraph
+                    print trans_paragraph.encode(output_encoding, 'ignore')
                     print ''
                 f.write(trans_paragraph.encode('utf8'))
                 f.write('\n\n')
