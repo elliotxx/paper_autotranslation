@@ -11,17 +11,20 @@ from pdfminer.converter import PDFPageAggregator
 import urllib2
 from cStringIO import StringIO
 
-import httplib
-import md5
-import urllib
-import random
-
 import requests
 import hashlib
 import time
 
 import sys
 import json
+
+from ProxyIP import ProxyIP
+
+# 输出日志等级
+# 0: 输出最简单，无段落信息，无错误信息
+# 1: 输出段落信息，无错误信息
+# 2: 输出段落信息，输出错误信息
+log_level = 0   
 
 # 有道翻译免费 api 接口
 class Youdao(object):
@@ -31,12 +34,12 @@ class Youdao(object):
         self.D = "ebSeFb%=XZ%T[KZ)c(sy!"
         self.salt = self.get_salt()
         self.sign = self.get_sign()
+        self.proxies = None
+        self.timeout = 5
 
     def get_md(self, value):
         '''md5加密'''
         m = hashlib.md5()
-        # m.update(value)
-        print value
         m.update(value.decode('utf8').encode('utf-8','ignore'))
         return m.hexdigest()
 
@@ -80,49 +83,34 @@ class Youdao(object):
             'action': 'FY_BY_CL1CKBUTTON',
             'typoResult': 'true'
         }
-        html = requests.post(self.url, data=data, headers=headers).text
-        # print(html)
-        infos = json.loads(html)
-        if 'translateResult' in infos:
+        # 设置代理
+        result = ''
+        while True:
             try:
-                # result = infos['translateResult'][0][0]['tgt']
-                # print(result)
-                result = ''
-                for p in infos['translateResult'][0]:
-                    result += p['tgt']
-                return result
-            except:
-                return ''
+                # 发送请求
+                if self.proxies == None:
+                    html = requests.post(self.url, data=data, headers=headers).text
+                else:
+                    html = requests.post(self.url, data=data, proxies=self.proxies, headers=headers, timeout=self.timeout).text
 
-# 有道翻译收费 api 接口
-def translate(text):
-    '''文本翻译'''
-    httpClient = None
-    myurl = '/api'
-    # text = 'good'
-    fromLang = 'EN'
-    toLang = 'zh-CHS'
-    salt = random.randint(1, 65536)
+                # 获取翻译结果
+                infos = json.loads(html)
+                if 'translateResult' in infos:
+                    result = ''
+                    for p in infos['translateResult'][0]:
+                        result += p['tgt']
+                else:
+                    raise Exception, 'No translateResult'
 
-    sign = appKey+text+str(salt)+secretKey
-    m1 = md5.new()
-    m1.update(sign)
-    sign = m1.hexdigest()
-    myurl = myurl+'?appKey='+appKey+'&q='+urllib.quote(text)+'&from='+fromLang+'&to='+toLang+'&salt='+str(salt)+'&sign='+sign
-     
-    try:
-        httpClient = httplib.HTTPConnection('openapi.youdao.com')
-        httpClient.request('GET', myurl)
-     
-        #response是HTTPResponse对象
-        response = httpClient.getresponse()
-        res = json.loads(response.read())
-        return res
-    except Exception, e:
-        print e
-    finally:
-        if httpClient:
-            httpClient.close()
+                break
+            except Exception, e:
+                if log_level > 1:
+                    print e
+                    print 'Retry!'
+                ip = ProxyIP().get()
+                self.proxies = {'http':'%s:%d'%(ip[0],ip[1])}
+        return result
+
                     
 
 def Pdf2Txt(path,Save_path):
@@ -148,7 +136,9 @@ def Pdf2Txt(path,Save_path):
         # 处理每一页
         paragraph = ''
         paragraph_list = []
-        for page in PDFPage.create_pages(document):
+        print '[Start get all pdf pages...]'
+        for page_no, page in enumerate(PDFPage.create_pages(document)):
+            print '[Get pdf page %d...]'%(page_no)
             interpreter.process_page(page)
             # 接受该页面的LTPage对象
             layout=device.get_result()
@@ -157,9 +147,9 @@ def Pdf2Txt(path,Save_path):
                 try:
                     if(isinstance(x,LTTextBox)):
                         for xx in x:
-                            paragraph += xx.get_text().strip('\n').encode('utf8')
+                            paragraph += xx.get_text().strip('\n').decode('utf8', 'ignore')
                         # 去除带论文商标的段落
-                        if paragraph.find('©') != -1:
+                        if paragraph.find('©'.decode('utf8')) != -1:
                             paragraph = ''
                             continue
                         # 去除纯数字的段落
@@ -170,21 +160,31 @@ def Pdf2Txt(path,Save_path):
                         paragraph_list.append(paragraph)
                         paragraph = ''
                 except Exception, e:
-                    print str(e)
-                    print "Failed!"
+                    if log_level > 1:
+                        print str(e)
+                        print "Failed!"
+        print ''
+
         # 写入文件
+        print '[Start translate all pdf paragraph...]'
+        paragraph_len = len(paragraph_list)
         with open('%s'%(Save_path),'w') as f:
-            for paragraph in paragraph_list:
+            for i, paragraph in enumerate(paragraph_list):
+                print '[Translating %d/%d...]'%(i+1, paragraph_len)
                 # 写入英文段落
-                f.write(paragraph)
+                f.write(paragraph.encode('utf8'))
                 f.write('\n\n')
                 # 写入翻译段落
                 # res = translate(paragraph)
                 # trans_paragraph = res['translation'][0].encode('utf8')
-                # print trans_paragraph
-                trans_paragraph = Youdao(paragraph).get_result().encode('utf8')
-                print trans_paragraph.decode('utf8')
-                f.write(trans_paragraph)
+                if log_level > 0:
+                    print paragraph
+                trans_paragraph = Youdao(paragraph).get_result()
+                if log_level > 0:
+                    print '[Translate success!]'
+                    print trans_paragraph
+                    print ''
+                f.write(trans_paragraph.encode('utf8'))
                 f.write('\n\n')
 
     fp.close()
