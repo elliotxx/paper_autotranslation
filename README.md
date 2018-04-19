@@ -1,5 +1,5 @@
 ## 论文自动翻译
-自动翻译论文的 pdf，生成带翻译段落的 txt 文档
+自动翻译论文（pdf），生成带翻译段落的 txt 文档作参考，以方便阅读英文文献。
 
 ## 介绍
 PDF 解析成文本采用 pdfminer 库，主要参考：[解决pdfminer ImportError: cannot import name process_pdf](https://blog.csdn.net/MrLevo520/article/details/52136414) 和 [（7）PDFMiner提取PDF文本](https://blog.csdn.net/fighting_no1/article/details/51038942)
@@ -18,7 +18,6 @@ ps：有道翻译API现在收费了，一篇4页的论文翻译一次就花了1�
 
 
 ## 依赖
-注意：基于 python 2.7
 * pdfminer
 * requests
 
