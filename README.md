@@ -1,4 +1,4 @@
-﻿## 论文自动翻译
+## 论文自动翻译
 自动翻译论文（pdf），生成带翻译段落的 txt 文档作参考，以方便阅读英文文献。
 
 ## 介绍
@@ -35,11 +35,12 @@ paper_translation.py "2017_ICSA_Bidirectional Mapping between Architecture Model
 
 3. 本地会生成 pdf 同名的 txt 文件
 
-效果图：
+注意：程序基于 python2.7
+
+## 效果图
 
 ![效果图](./screenshot/1.png)
 
-注意：程序基于 python2.7
 
 ## 参考资料
 * PDFMiner 官方文档  
