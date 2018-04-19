@@ -24,9 +24,19 @@ ps：有道翻译API现在收费了，一篇4页的论文翻译一次就花了1�
 
 
 ## 用法
+1. 安装依赖
 ```
-paper_translation.py 2017_ICSA_Bidirectional Mapping between Architecture Model and Code for Synchronization.pdf
+pip install pdfminer requests
 ```
+
+2. 运行测试用例
+```
+paper_translation.py "2017_ICSA_Bidirectional Mapping between Architecture Model and Code for Synchronization.pdf"
+```
+
+3. 本地会生成 pdf 同名的 txt 文件
+
+注意：程序基于 python2.7
 
 ## 参考资料
 * PDFMiner 官方文档  
