@@ -38,7 +38,7 @@ output_encoding = sys.stdout.encoding
 file_encoding = 'utf8'
 
 # 最大进程数
-MAX_PROCESS_NUM = 100
+MAX_PROCESS_NUM = 50
 
 
 # 有道翻译免费 api 接口
@@ -168,8 +168,9 @@ def Pdf2Txt(path):
                 try:
                     if(isinstance(x,LTTextBox)):
                         for xx in x:
-                            content = xx.get_text().strip('\n')
-                            paragraph += content
+                            content = xx.get_text().strip()
+                            paragraph += content + ' '
+                        paragraph = paragraph.strip()
 
                         # 去除带论文商标的段落
                         if paragraph.find('©'.decode('utf8')) != -1:
