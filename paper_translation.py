@@ -169,7 +169,10 @@ def Pdf2Txt(path):
                     if(isinstance(x,LTTextBox)):
                         for xx in x:
                             content = xx.get_text().strip()
-                            paragraph += content + ' '
+                            if paragraph != '' and paragraph[-1] == '-':
+                                paragraph = paragraph[:-1] + content
+                            else:
+                                paragraph += ' ' + content
                         paragraph = paragraph.strip()
 
                         # 去除带论文商标的段落
