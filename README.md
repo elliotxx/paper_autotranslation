@@ -35,7 +35,7 @@ paper_translation.py "2017_ICSA_Bidirectional Mapping between Architecture Model
 
 3. 本地会生成 pdf 同名的 txt 文件
 
-注意：程序基于 python2.7
+注意：程序基于 python2.7，**python3.x 请使用文件 "paper_translation_3x.py"（感谢 [@Zephyrusvvvv](https://github.com/Zephyrusvvvv) 和我一起修改 3.x 的版本）**
 
 ## 效果图
 
