@@ -38,7 +38,7 @@ output_encoding = sys.stdout.encoding
 file_encoding = 'utf8'
 
 # 最大进程数
-MAX_PROCESS_NUM = 50
+MAX_PROCESS_NUM = 20
 
 
 # 有道翻译免费 api 接口
@@ -52,7 +52,7 @@ class Youdao(object):
         self.salt = self.get_salt()
         self.sign = self.get_sign()
         self.proxies = None
-        self.timeout = 5
+        self.timeout = 20
 
     def get_md(self, value):
         '''md5加密'''
@@ -124,6 +124,7 @@ class Youdao(object):
                 if log_level > 1:
                     print e
                     print 'Retry!'
+                time.sleep(3)
                 ip = ProxyIP().get()
                 self.proxies = {'http':'%s:%d'%(ip[0],ip[1])}
         return result
@@ -159,7 +160,7 @@ def Pdf2Txt(path):
         paragraph_list = []
         print '[Start get all pdf pages content...]'
         for page_no, page in enumerate(PDFPage.create_pages(document)):
-            print '[Get content of page %d ...]'%(page_no)
+            print '[Get content of page %d ...]'%(page_no+1)
             interpreter.process_page(page)
             # 接受该页面的LTPage对象
             layout=device.get_result()
