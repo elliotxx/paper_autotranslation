@@ -39,7 +39,7 @@ output_encoding = sys.stdout.encoding
 file_encoding = 'utf8'
 
 # 最大进程数
-MAX_PROCESS_NUM = 20
+MAX_PROCESS_NUM = 10
 
 
 
@@ -48,7 +48,8 @@ MAX_PROCESS_NUM = 20
 # 参考自：https://github.com/Chinese-boy/Many-Translaters
 class Google():
     proxies = None
-    timeout = 20
+    timeout = 10
+    max_try_cnt = 10
 
     def __init__(self):
         self.ctx = execjs.compile(""" 
@@ -95,7 +96,7 @@ class Google():
     def getTk(self, text):
         return self.ctx.call("TL", text)
 
-    def translate(self, content):
+    def translate(self, paragraph_no, content):
         if len(content) > 4891:
             print("Text length exceed!")
             return
@@ -141,11 +142,12 @@ class Google():
 
         # 设置代理
         result = ''
+        cur_try_cnt = 0
         while True:
             try:
                 # 发送请求
                 if self.proxies == None:
-                    response = requests.get(url=url, params=params, headers=headers)
+                    response = requests.get(url=url, params=params, headers=headers, timeout=self.timeout)
                 else:
                     response = requests.get(url=url, params=params, headers=headers, proxies=self.proxies, timeout=self.timeout)
 
@@ -163,9 +165,15 @@ class Google():
                 if log_level > 1:
                     print e
                     print 'Retry!'
-                time.sleep(3)
-                ip = ProxyIP().get()
-                self.proxies = {'http':'%s:%d'%(ip[0],ip[1])}
+
+                cur_try_cnt += 1
+                if cur_try_cnt < self.max_try_cnt:
+                    time.sleep(3)
+                    ip = ProxyIP().get()
+                    self.proxies = {'http':'%s:%d'%(ip[0],ip[1])}
+                else:
+                    print '%d Exceed max try cnt! Abandon!'%paragraph_no
+                    return ''
         return result
 
 
@@ -260,7 +268,7 @@ class Youdao(object):
 def translate_per_paragraph(paragraph_no, paragraph):
     '''翻译每个段落'''
     # trans_paragraph = Youdao(paragraph).get_result()
-    trans_paragraph = Google().translate(paragraph)
+    trans_paragraph = Google().translate(paragraph_no, paragraph)
     print '[Paragraph %d translate successfully.]'%(paragraph_no+1)
     time.sleep(2 + random.random()*3)
     return trans_paragraph
