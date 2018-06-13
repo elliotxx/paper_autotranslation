@@ -20,6 +20,7 @@ ps：有道翻译API现在收费了，一篇4页的论文翻译一次就花了1�
 ## 依赖
 * pdfminer
 * requests
+* execjs
 
 
 ## 用法

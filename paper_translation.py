@@ -19,6 +19,7 @@ import requests
 import hashlib
 import time
 import random
+import execjs
 
 import sys
 import json
@@ -39,6 +40,133 @@ file_encoding = 'utf8'
 
 # 最大进程数
 MAX_PROCESS_NUM = 20
+
+
+
+# 谷歌翻译免费 api 接口
+# 该类为网友封装的第三方免费翻译接口，我在此基础上做了一些修改
+# 参考自：https://github.com/Chinese-boy/Many-Translaters
+class Google():
+    proxies = None
+    timeout = 20
+
+    def __init__(self):
+        self.ctx = execjs.compile(""" 
+        function TL(a) { 
+        var k = ""; 
+        var b = 406644; 
+        var b1 = 3293161072; 
+
+        var jd = "."; 
+        var $b = "+-a^+6"; 
+        var Zb = "+-3^+b+-f"; 
+
+        for (var e = [], f = 0, g = 0; g < a.length; g++) { 
+            var m = a.charCodeAt(g); 
+            128 > m ? e[f++] = m : (2048 > m ? e[f++] = m >> 6 | 192 : (55296 == (m & 64512) && g + 1 < a.length && 56320 == (a.charCodeAt(g + 1) & 64512) ? (m = 65536 + ((m & 1023) << 10) + (a.charCodeAt(++g) & 1023), 
+            e[f++] = m >> 18 | 240, 
+            e[f++] = m >> 12 & 63 | 128) : e[f++] = m >> 12 | 224, 
+            e[f++] = m >> 6 & 63 | 128), 
+            e[f++] = m & 63 | 128) 
+        } 
+        a = b; 
+        for (f = 0; f < e.length; f++) a += e[f], 
+        a = RL(a, $b); 
+        a = RL(a, Zb); 
+        a ^= b1 || 0; 
+        0 > a && (a = (a & 2147483647) + 2147483648); 
+        a %= 1E6; 
+        return a.toString() + jd + (a ^ b) 
+    }; 
+
+    function RL(a, b) { 
+        var t = "a"; 
+        var Yb = "+"; 
+        for (var c = 0; c < b.length - 2; c += 3) { 
+            var d = b.charAt(c + 2), 
+            d = d >= t ? d.charCodeAt(0) - 87 : Number(d), 
+            d = b.charAt(c + 1) == Yb ? a >>> d: a << d; 
+            a = b.charAt(c) == Yb ? a + d & 4294967295 : a ^ d 
+        } 
+        return a 
+    } 
+    """)
+
+    def getTk(self, text):
+        return self.ctx.call("TL", text)
+
+    def translate(self, content):
+        if len(content) > 4891:
+            print("Text length exceed!")
+            return
+
+        # get tk
+        tk = self.getTk(content)
+        # content = urllib.parse.quote(content)
+
+        # url & params
+        url = "http://translate.google.cn/translate_a/single"
+        params = {
+            'client' : 't',
+            'sl' : 'en',
+            'tl' : 'zh-CN',
+            'hl' : 'zh-CN',
+            'dt' : 'bd',
+            'dt' : 'ex',
+            'dt' : 'ld',
+            'dt' : 'md',
+            'dt' : 'qca',
+            'dt' : 'rw',
+            'dt' : 'rm',
+            'dt' : 'ss',
+            'dt' : 't',
+            'ie' : 'UTF-8',
+            'oe' : 'UTF-8',
+            'clearbtn' : '1',
+            'otf' : '1',
+            'pc' : '1',
+            'srcrom' : '0',
+            'ssel' : '0',
+            'tsel' : '0',
+            'kc' : '2',
+            'tk' : tk,
+            'q' : content
+        }
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0'}
+
+        # url = "http://translate.google.cn/translate_a/single?client=t" \
+        #       "&sl=en&tl=zh-CN&hl=zh-CN&dt=at&dt=bd&dt=ex&dt=ld&dt=md&dt=qca" \
+        #       "&dt=rw&dt=rm&dt=ss&dt=t&ie=UTF-8&oe=UTF-8&clearbtn=1&otf=1&pc=1" \
+        #       "&srcrom=0&ssel=0&tsel=0&kc=2&tk=%s&q=%s" % (tk, content)
+
+        # 设置代理
+        result = ''
+        while True:
+            try:
+                # 发送请求
+                if self.proxies == None:
+                    response = requests.get(url=url, params=params, headers=headers)
+                else:
+                    response = requests.get(url=url, params=params, headers=headers, proxies=self.proxies, timeout=self.timeout)
+
+                # 获取翻译结果
+                result = response.content.decode('utf-8')
+
+                # 处理译结果
+                result = eval(result.replace('null','None'))
+                result = map(lambda x: x[0], result[0])
+                result = ''.join(result)
+                result = result.decode('utf8')
+
+                break
+            except Exception, e:
+                if log_level > 1:
+                    print e
+                    print 'Retry!'
+                time.sleep(3)
+                ip = ProxyIP().get()
+                self.proxies = {'http':'%s:%d'%(ip[0],ip[1])}
+        return result
 
 
 # 有道翻译免费 api 接口
@@ -131,8 +259,10 @@ class Youdao(object):
 
 def translate_per_paragraph(paragraph_no, paragraph):
     '''翻译每个段落'''
-    trans_paragraph = Youdao(paragraph).get_result()
+    # trans_paragraph = Youdao(paragraph).get_result()
+    trans_paragraph = Google().translate(paragraph)
     print '[Paragraph %d translate successfully.]'%(paragraph_no+1)
+    time.sleep(2 + random.random()*3)
     return trans_paragraph
 
 def Pdf2Txt(path):
@@ -197,8 +327,8 @@ def Pdf2Txt(path):
 
 def translate(paragraph_list, Save_path):
     # 开始翻译
-    print '[Start translate all pdf paragraph...]'
     paragraph_len = len(paragraph_list)
+    print '[Start translate all pdf paragraphs(%d)...]'%paragraph_len
     # 清除空白元素
     paragraph_list = filter(lambda x:False if x.strip == '' else True, paragraph_list)
     
@@ -236,6 +366,7 @@ def translate(paragraph_list, Save_path):
         trans_paragraph_list.append( result.get() )
 
     # 创建空文件
+    print '[Create empyt file...]'
     with open('%s'%(Save_path),'w') as f:
         pass
     # 写入文件
@@ -256,6 +387,9 @@ def translate(paragraph_list, Save_path):
             if log_level > 0:
                 print trans_paragraph.encode(output_encoding, 'ignore')
                 print ''
+
+            if trans_paragraph == None:
+                continue
             f.write(trans_paragraph.encode('utf8'))
             f.write('\n\n')
     print '[The translated document has been written to local.]'
